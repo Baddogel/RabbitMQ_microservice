@@ -21,11 +21,19 @@ try:
     def callback(ch, method, properties, body):
         print(f'Получен вектор признаков {body}')
         features = json.loads(body)
-        pred = regressor.predict(np.array(features).reshape(1, -1))
+        message_id = features['id']
+        feature_array = np.array(features['body']).reshape(1, -1)
+        pred = regressor.predict(feature_array)
+
+        pred_message = {
+            'id': message_id,
+            'body': pred[0]
+        }
+
         channel.basic_publish(exchange='',
-                        routing_key='y_pred',
-                        body=json.dumps(pred[0]))
-        print(f'Предсказание {pred[0]} отправлено в очередь y_pred')
+                              routing_key='y_pred',
+                              body=json.dumps(pred_message))
+        print(f'Предсказание {pred_message} отправлено в очередь y_pred')
  
     # Извлекаем сообщение из очереди features
     # on_message_callback показывает, какую функцию вызвать при получении сообщения
